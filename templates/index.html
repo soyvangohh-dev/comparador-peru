@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Comparador Financiero del Perú — Tasas en Tiempo Real</title>
+  <meta name="description" content="Compara tasas de interés de bancos, cajas municipales, cajas rurales y cooperativas del sistema financiero peruano en tiempo real."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+<header class="header">
+  <div class="header-logo">
+    <div class="icon">🏦</div>
+    <div>
+      <h1>Comparador Financiero Perú</h1>
+      <span>Tasas de depósito a plazo en tiempo real · SBS / BCRP</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span>EN VIVO</span>
+    </div>
+    <div class="countdown-wrap">
+      ⟳ actualiza en <span class="countdown-num" id="countdownNum">30</span>s
+    </div>
+    <button id="refreshBtn" style="background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);color:var(--gold);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;font-family:inherit;">↻ Actualizar</button>
+    <span class="last-update" id="lastUpdate">—</span>
+  </div>
+</header>
+<div class="update-bar-wrap">
+  <div class="update-bar" id="updateBar" style="width:0%"></div>
+</div>
+<div class="main-layout">
+  <aside class="left-panel">
+    <div class="datetime-card">
+      <div class="dt-icon">📅</div>
+      <div class="dt-info">
+        <div class="dt-date" id="currentDate">—</div>
+        <div class="dt-time" id="currentTime">—</div>
+      </div>
+    </div>
+    <div class="ref-rate-card">
+      <div class="ref-label">🏛️ Tasa referencial BCRP</div>
+      <div class="ref-value" id="refRate">—</div>
+      <div class="ref-sub">Banco Central de Reserva del Perú</div>
+    </div>
+    <div>
+      <div class="panel-title">Filtrar por tipo</div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">Todos</button>
+        <button class="filter-tab" data-filter="banco">🏦 Bancos</button>
+        <button class="filter-tab" data-filter="caja_municipal">🏛️ Cajas Mun.</button>
+        <button class="filter-tab" data-filter="caja_rural">🌾 Cajas Rur.</button>
+        <button class="filter-tab" data-filter="cooperativa">🤝 Cooperativas</button>
+      </div>
+    </div>
+    <div>
+      <div class="panel-title">⭐ Mejor tasa por categoría</div>
+      <div class="best-cards" id="bestCards">
+        <div style="color:var(--text-muted);font-size:12px;padding:8px">Cargando…</div>
+      </div>
+    </div>
+    <div class="calc-card">
+      <div class="panel-title">💰 Calculadora de inversión</div>
+      <div class="calc-row" style="margin-top:8px">
+        <span class="calc-label">Actualización automática</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="autoToggle" checked/>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="amount-group">
+        <div class="amount-label">
+          <span>Monto a invertir</span>
+          <span style="color:var(--text-muted)" id="periodLabel">1 año</span>
+        </div>
+        <div class="amount-input-wrap">
+          <div class="amount-prefix">S/</div>
+          <input class="amount-input" id="amountInput" type="number" value="5000" min="100" step="100" placeholder="5000"/>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--text-muted);line-height:1.6">
+        💡 Ganancia calculada con <strong style="color:var(--text-secondary)">interés compuesto (TEA)</strong>.<br/>
+        La ganancia neta estima el Impuesto a la Renta del 5%.
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:4px">
+      📋 <strong>Fuente:</strong> SBS · BCRP · Entidades financieras.<br/>
+      Datos de carácter público y referencial.<br/>
+      Verifique las condiciones vigentes con cada entidad.
+    </div>
+  </aside>
+  <section class="right-panel">
+    <div class="period-tabs">
+      <button class="period-tab" data-period="30">30 DÍAS</button>
+      <button class="period-tab" data-period="60">60 DÍAS</button>
+      <button class="period-tab" data-period="90">90 DÍAS</button>
+      <button class="period-tab" data-period="180">6 MESES</button>
+      <button class="period-tab active" data-period="360">1 AÑO</button>
+    </div>
+    <div class="table-wrap">
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div style="font-size:13px;color:var(--text-secondary)">Consultando tasas del sistema financiero…</div>
+      </div>
+      <div id="tableSection" style="display:none">
+        <div class="summary-stats">
+          <div class="stat-box">
+            <div class="s-label">Entidades</div>
+            <div class="s-value" id="statsInstitutions">—</div>
+            <div class="s-sub">comparadas</div>
+          </div>
+          <div class="stat-box highlight">
+            <div class="s-label">Mayor TEA</div>
+            <div class="s-value" id="statsMaxRate">—</div>
+            <div class="s-sub">en el sistema</div>
+          </div>
+          <div class="stat-box highlight">
+            <div class="s-label">Mayor ganancia</div>
+            <div class="s-value" id="statsMaxEarning">—</div>
+            <div class="s-sub">para tu monto</div>
+          </div>
+          <div class="stat-box">
+            <div class="s-label">Monto mínimo</div>
+            <div class="s-value" id="statsMinAmount">—</div>
+            <div class="s-sub">para empezar</div>
+          </div>
+        </div>
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Entidad financiera</th>
+              <th>TEA ofrecida</th>
+              <th>Monto invertido</th>
+              <th>Ganancia proyectada</th>
+              <th>Ganancia neta</th>
+              <th>Info</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="source-note">
+      Datos referenciales de uso público conforme a la normativa peruana · SBS · BCRP · Actualización automática cada <strong>30 segundos</strong> · No constituye asesoría financiera
+    </div>
+  </section>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
