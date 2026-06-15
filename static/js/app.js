@@ -1,6 +1,7 @@
-// app.js — Comparador Financiero del Perú
+// app.js — Comparador Financiero del Perú (versión estática - Live Server)
 'use strict';
 
+// ── Datos de instituciones financieras (SBS Perú - datos referenciales públicos) ──
 const INSTITUTIONS = [
   // BANCOS
   { id:1,  name:'BCP',          full_name:'Banco de Crédito del Perú',                type:'banco',          type_label:'Banco',          base_rates:{30:2.80,60:3.20,90:4.00,180:4.50,360:5.00}, min_amount:500,  url:'https://www.viabcp.com/ahorro/deposito-a-plazo',     logo_abbr:'BCP',   accent:'#4d9fff' },
@@ -33,20 +34,23 @@ const INSTITUTIONS = [
   { id:25, name:'San Cristóbal',full_name:'Cooperativa San Cristóbal de Huamanga',     type:'cooperativa',    type_label:'Cooperativa',    base_rates:{30:7.80,60:8.80,90:9.80,180:10.20,360:11.50},min_amount:500, url:'https://www.coopac-schr.pe',                          logo_abbr:'SCH',   accent:'#f0a500' },
 ];
 
+// ── State ────────────────────────────────────────────────────────────────────
 const state = {
   period: '360',
   filter: 'all',
   amount: 5000,
   autoUpdate: true,
-  currentRates: {},
+  currentRates: {},  // {id: rate}
   prevRates: {},
   countdown: 30,
   countdownTimer: null,
   reference_rate: 6.50,
 };
 
+// ── DOM ──────────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
+// ── Gaussian random ───────────────────────────────────────────────────────────
 function gaussRand(mean = 0, std = 0.06) {
   let u = 0, v = 0;
   while (u === 0) u = Math.random();
@@ -54,6 +58,7 @@ function gaussRand(mean = 0, std = 0.06) {
   return mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
 }
 
+// ── Rate engine ───────────────────────────────────────────────────────────────
 function initRates() {
   INSTITUTIONS.forEach(inst => {
     state.currentRates[inst.id] = {};
@@ -76,12 +81,14 @@ function updateRates() {
   });
 }
 
+// ── Compound interest calculator ──────────────────────────────────────────────
 function calcEarning(amount, days, teaPct) {
   const tea = teaPct / 100;
   const earning = amount * (Math.pow(1 + tea, days / 365) - 1);
   return { earning: Math.round(earning * 100) / 100, total: Math.round((amount + earning) * 100) / 100, net: Math.round(earning * 0.95 * 100) / 100 };
 }
 
+// ── Formatting ────────────────────────────────────────────────────────────────
 const fmt = {
   money: n => 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
   rate:  n => n.toFixed(2),
@@ -90,6 +97,7 @@ const fmt = {
 const PERIOD_DAYS = { '30':30, '60':60, '90':90, '180':180, '360':360 };
 const PERIOD_LABELS = { '30':'30 días', '60':'60 días', '90':'90 días', '180':'6 meses', '360':'1 año' };
 
+// ── Clock ─────────────────────────────────────────────────────────────────────
 function startClock() {
   function tick() {
     const now = new Date();
@@ -99,6 +107,7 @@ function startClock() {
   tick(); setInterval(tick, 1000);
 }
 
+// ── Countdown ─────────────────────────────────────────────────────────────────
 function startCountdown() {
   clearInterval(state.countdownTimer);
   state.countdown = 30;
@@ -116,6 +125,7 @@ function startCountdown() {
   }, 1000);
 }
 
+// ── Get sorted + filtered data ────────────────────────────────────────────────
 function getData() {
   const p = state.period;
   const days = PERIOD_DAYS[p];
@@ -133,6 +143,7 @@ function getData() {
     .map((r, i) => ({ ...r, rank: i + 1 }));
 }
 
+// ── Render ────────────────────────────────────────────────────────────────────
 function renderAll() {
   const rows = getData();
   renderStats(rows);
@@ -227,12 +238,14 @@ function renderBestCards() {
   $('bestCards').innerHTML = html;
 }
 
+// ── Refresh ───────────────────────────────────────────────────────────────────
 function refresh() {
   updateRates();
   renderAll();
   startCountdown();
 }
 
+// ── Event handlers ────────────────────────────────────────────────────────────
 function setPeriod(period) {
   state.period = period;
   document.querySelectorAll('.period-tab').forEach(t => t.classList.toggle('active', t.dataset.period === period));
@@ -250,6 +263,7 @@ function onAmountChange() {
   if (!isNaN(v) && v > 0) { state.amount = v; renderAll(); }
 }
 
+// ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initRates();
   startClock();
@@ -264,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   $('refreshBtn').addEventListener('click', () => refresh());
 
+  // Primera carga
   renderAll();
   startCountdown();
 });
