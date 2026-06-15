@@ -40,14 +40,14 @@ const state = {
   filter: 'all',
   amount: 5000,
   autoUpdate: true,
-  currentRates: {},  // {id: rate}
+  currentRates: {},
   prevRates: {},
   countdown: 30,
   countdownTimer: null,
   reference_rate: 6.50,
 };
 
-// ── DOM ──────────────────────────────────────────────────────────────────────
+// ── DOM Selector ─────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
 // ── Gaussian random ───────────────────────────────────────────────────────────
@@ -85,7 +85,11 @@ function updateRates() {
 function calcEarning(amount, days, teaPct) {
   const tea = teaPct / 100;
   const earning = amount * (Math.pow(1 + tea, days / 365) - 1);
-  return { earning: Math.round(earning * 100) / 100, total: Math.round((amount + earning) * 100) / 100, net: Math.round(earning * 0.95 * 100) / 100 };
+  return { 
+    earning: Math.round(earning * 100) / 100, 
+    total: Math.round((amount + earning) * 100) / 100, 
+    net: Math.round(earning * 0.95 * 100) / 100 
+  };
 }
 
 // ── Formatting ────────────────────────────────────────────────────────────────
@@ -104,7 +108,8 @@ function startClock() {
     $('currentTime').textContent = now.toLocaleTimeString('es-PE', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
     $('currentDate').textContent = now.toLocaleDateString('es-PE', { weekday:'short', day:'numeric', month:'long' });
   }
-  tick(); setInterval(tick, 1000);
+  tick(); 
+  setInterval(tick, 1000);
 }
 
 // ── Countdown ─────────────────────────────────────────────────────────────────
@@ -175,14 +180,14 @@ function renderTable(rows) {
   const rowCls     = r => r===1?'top-1':r===2?'top-2':r===3?'top-3':'';
 
   $('tableBody').innerHTML = rows.map(r => `
-    <tr class="${rowCls(r.rank)} fade-in" onclick="window.open('${r.url}','_blank','noopener')" title="Ver tarifario en ${r.full_name}">
-      <td><div class="rank-badge ${rankCls(r.rank)}">${r.rank}</div></td>
+    <tr class="\( {rowCls(r.rank)} fade-in" onclick="window.open(' \){r.url}','_blank','noopener')" title="Ver tarifario en ${r.full_name}">
+      <td><div class="rank-badge \( {rankCls(r.rank)}"> \){r.rank}</div></td>
       <td>
         <div class="inst-info">
-          <div class="inst-logo" style="background:${r.accent}22;border:1px solid ${r.accent}66;color:${r.accent}">${r.logo_abbr}</div>
+          <div class="inst-logo" style="background:${r.accent}22;border:1px solid \( {r.accent}66;color: \){r.accent}">${r.logo_abbr}</div>
           <div>
             <div class="inst-name">${r.full_name}</div>
-            <span class="inst-type-badge badge-${r.type}">${r.type_label}</span>
+            <span class="inst-type-badge badge-\( {r.type}"> \){r.type_label}</span>
           </div>
         </div>
       </td>
@@ -192,7 +197,7 @@ function renderTable(rows) {
             <div class="rate-val">${fmt.rate(r.rate)}</div>
             <div class="rate-pct">% TEA</div>
           </div>
-          <span style="color:${trendColor(r.trend)};font-size:13px">${trendIcon(r.trend)}</span>
+          <span style="color:\( {trendColor(r.trend)};font-size:13px"> \){trendIcon(r.trend)}</span>
         </div>
       </td>
       <td>
@@ -213,7 +218,7 @@ function renderTable(rows) {
       </td>
       <td>
         <div style="font-size:11px;color:var(--text-secondary)">${PERIOD_LABELS[state.period]}</div>
-        ${r.change !== 0 ? <div style="font-size:10px;color:${trendColor(r.trend)}">${r.change>0?'+':''}${r.change.toFixed(3)}%</div> : ''}
+        \( {r.change !== 0 ? <div style="font-size:10px;color: \){trendColor(r.trend)}">\( {r.change>0?'+':''} \){r.change.toFixed(3)}%</div> : ''}
       </td>
     </tr>`).join('');
 }
@@ -260,7 +265,10 @@ function setFilter(filter) {
 
 function onAmountChange() {
   const v = parseFloat($('amountInput').value);
-  if (!isNaN(v) && v > 0) { state.amount = v; renderAll(); }
+  if (!isNaN(v) && v > 0) { 
+    state.amount = v; 
+    renderAll(); 
+  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
